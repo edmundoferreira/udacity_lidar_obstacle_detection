@@ -64,21 +64,60 @@ pcl::visualization::PCLVisualizer::Ptr initScene()
 std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int maxIterations, float distanceTol)
 {
 	std::unordered_set<int> inliersResult;
+	std::unordered_set<int> inliersTemp;
 	srand(time(NULL));
-	
-	// TODO: Fill in this function
 
-	// For max iterations 
+	pcl::PointXYZ p1;
+	pcl::PointXYZ p2;
+	// TODO: Fill in this function DONE
 
-	// Randomly sample subset and fit line
+	// For max iterations
+	for(auto iteration= 0; iteration<maxIterations; iteration++) {
 
-	// Measure distance between every point and fitted line
-	// If distance is smaller than threshold count it as inlier
+		// Randomly sample subset and fit line
+		auto index1 = rand() % cloud->points.size();
+		auto index2 = rand() % cloud->points.size();
+		if (index1 != index2) //escape equal indexes ie single point line will fail
+		{
+			inliersTemp.clear();
+			inliersTemp.insert(index1);
+			inliersTemp.insert(index2);
+			// std::cout << "#Iteration " << iteration << "(p" << index1 << ",p" << index2 << ")" << std::endl;
+			//for p1=(x1,y1) and p2=(x2,y2) => A=y1-y2 B=x2-x1  C=x1*y2-x2*y1
+			p1 = cloud->points[index1];
+			p2 = cloud->points[index2];
+			auto A = p1.y - p2.y;
+			auto B = p2.x - p1.x;
+			auto C = p1.x * p2.y - p2.x * p1.y;
 
-	// Return indicies of inliers from fitted line with most inliers
-	
+			// Measure distance between every point and fitted line
+			for (auto index = 0; index < cloud->points.size(); index++)
+			{
+				//escape p1 p2 that are inliers already
+				if(inliersTemp.count(index)>0)
+					continue;
+				// If distance is smaller than threshold count it as inlier
+				// d=∣Ax+By+C∣/sqrt(A^2 +B^2 )
+				auto d = std::abs(A*cloud->points[index].x + B*cloud->points[index].y + C) / std::sqrt(std::pow(A, 2) + std::pow(B, 2));
+				if (d < distanceTol)
+				{
+					inliersTemp.insert(index);
+					// std::cout << "index=" << index << " is an inlier" << std::endl;
+				}
+			}
+			// std::cout << "#LocalMaxInliers " << inliersTemp.size() << std::endl;
+			// Return indicies of inliers from fitted line with most inliers
+			if(inliersTemp.size()>inliersResult.size())
+				inliersResult = inliersTemp;
+			// std::cout << "#GlobalMaxInliers " << inliersResult.size() << std::endl;
+
+		}else{
+			iteration--;
+		}
+
+	}
+
 	return inliersResult;
-
 }
 
 int main ()
@@ -89,10 +128,10 @@ int main ()
 
 	// Create data
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData();
-	
 
-	// TODO: Change the max iteration and distance tolerance arguments for Ransac function
-	std::unordered_set<int> inliers = Ransac(cloud, 0, 0);
+
+	// TODO: Change the max iteration and distance tolerance arguments for Ransac function DONE
+	std::unordered_set<int> inliers = Ransac(cloud, 50, 0.5);
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers(new pcl::PointCloud<pcl::PointXYZ>());
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers(new pcl::PointCloud<pcl::PointXYZ>());
@@ -117,10 +156,10 @@ int main ()
   	{
   		renderPointCloud(viewer,cloud,"data");
   	}
-	
+
   	while (!viewer->wasStopped ())
   	{
   	  viewer->spinOnce ();
   	}
-  	
+
 }
