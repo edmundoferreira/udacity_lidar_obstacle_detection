@@ -43,23 +43,23 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 {
     // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
     // Create the filtering object
-    typename pcl::PointCloud<PointT>::Ptr cloud_p(new pcl::PointCloud<PointT>());
-    typename pcl::PointCloud<PointT>::Ptr cloud_f(new pcl::PointCloud<PointT>());
+    typename pcl::PointCloud<PointT>::Ptr cloud_plane(new pcl::PointCloud<PointT>());
+    typename pcl::PointCloud<PointT>::Ptr cloud_obst(new pcl::PointCloud<PointT>());
     pcl::ExtractIndices<PointT> extract;
 
     extract.setInputCloud(cloud);
     extract.setIndices(inliers);
     extract.setNegative (false);
-    extract.filter(*cloud_p);
-    std::cerr << "PointCloud representing the planar component: " << cloud_p->width * cloud_p->height << " data points." << std::endl;
+    extract.filter(*cloud_plane);
+    std::cerr << "PointCloud representing the planar component: " << cloud_plane->width * cloud_plane->height << " data points." << std::endl;
 
 
     // Create the filtering object
     extract.setNegative (true);
-    extract.filter (*cloud_f);
+    extract.filter (*cloud_obst);
     // cloud_filtered.swap (cloud_f);
 
-    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(cloud_p, cloud_f);
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(cloud_obst, cloud_plane);
     return segResult;
 }
 
