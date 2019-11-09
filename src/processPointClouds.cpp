@@ -19,29 +19,59 @@ void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr
     std::cout << cloud->points.size() << std::endl;
 }
 
-
-template<typename PointT>
+template <typename PointT>
 typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint)
 {
 
-    // Time segmentation process
+    // Time filtering process
     auto startTime = std::chrono::steady_clock::now();
 
-    // TODO:: Fill in the function to do voxel grid point reduction and region based filtering
+    // TODO:: Fill in the function to do voxel grid point reduction and region based filtering DONE
+    typename pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>());
+    typename pcl::PointCloud<PointT>::Ptr cloud_cropped(new pcl::PointCloud<PointT>());
+
+    // create crop box
+    typename pcl::CropBox<PointT> boxFilter;
+    boxFilter.setInputCloud(cloud);
+    boxFilter.setMin(minPoint);
+    boxFilter.setMax(maxPoint);
+    boxFilter.filter(*cloud_cropped);
+
+    typename pcl::CropBox<PointT> selfCarCrop;
+    std::vector<int> indices;
+    selfCarCrop.setInputCloud(cloud_cropped);
+    selfCarCrop.setMin(Eigen::Vector4f(-1.5, -1.7, -1, 1));
+    selfCarCrop.setMax(Eigen::Vector4f(2.6, 1.7, -0.4, 1));
+    selfCarCrop.filter(indices);
+
+    pcl::PointIndices::Ptr inliers{new pcl::PointIndices};
+    for (auto point : indices)
+        inliers->indices.push_back(point);
+
+    pcl::ExtractIndices<PointT> extract;
+    extract.setInputCloud(cloud_cropped);
+    extract.setIndices(inliers);
+    extract.setNegative(true);
+    extract.filter(*cloud_cropped);
+
+    // Note seems to be faster to crop first then voxel filter
+    // Create the filtering object
+    typename pcl::VoxelGrid<PointT> sor;
+    sor.setInputCloud(cloud_cropped);
+    sor.setLeafSize(filterRes, filterRes, filterRes);
+    sor.filter(*cloud_filtered);
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
 
-    return cloud;
-
+    return cloud_filtered;
 }
-
 
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud)
 {
-    // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
+    // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane DONE
     // Create the filtering object
     typename pcl::PointCloud<PointT>::Ptr cloud_plane(new pcl::PointCloud<PointT>());
     typename pcl::PointCloud<PointT>::Ptr cloud_obst(new pcl::PointCloud<PointT>());
@@ -57,7 +87,6 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     // Create the filtering object
     extract.setNegative (true);
     extract.filter (*cloud_obst);
-    // cloud_filtered.swap (cloud_f);
 
     std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(cloud_obst, cloud_plane);
     return segResult;
