@@ -55,7 +55,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     // renderRays(viewer,lidarSen->position, pclData);
     // renderPointCloud(viewer, pclData, "point cloud", Color(1,1,1));
 
-    // TODO:: Create point processor
+    // TODO:: Create point processor DONE
     ProcessPointClouds<pcl::PointXYZ>* pointProcessor = new ProcessPointClouds<pcl::PointXYZ>();
     std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr> segmentCloud = pointProcessor->SegmentPlane(pclData, 100, 0.2);
     // renderPointCloud(viewer, segmentCloud.first, "obstCloud", Color(1,0,0));
@@ -93,6 +93,12 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer)
     // ----------------------------------------------------
     // -----Open 3D viewer and display City Block     -----
     // ----------------------------------------------------
+    bool renderScene = false;
+    bool renderClusters = true;
+    bool renderBoundingBox = true;
+    bool renderSegmentPlane = true;
+    bool renderObstacles= true;
+
 
     ProcessPointClouds<pcl::PointXYZI> *pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
     //   pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
@@ -101,7 +107,17 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer)
     // renderPointCloud(viewer, inputCloud, "inputCloud");
     // Experiment with the ? values and find what works best
     auto filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.20, Eigen::Vector4f(-10, -5, -3, 1), Eigen::Vector4f(35, 8, 0, 1));
-    renderPointCloud(viewer, filterCloud, "filterCloud");
+
+    if (renderScene)
+        renderPointCloud(viewer, filterCloud, "filterCloud");
+
+
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2);
+    if (renderSegmentPlane)
+        renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0, 1, 0));
+
+    if (renderObstacles)
+        renderPointCloud(viewer, segmentCloud.first, "obstCloud", Color(1,0,0));
 }
 
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
