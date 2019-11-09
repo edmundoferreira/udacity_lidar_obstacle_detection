@@ -28,7 +28,7 @@ struct KdTree
 	void insertNode(Node **node, std::vector<float> point, int id)
 	{
 		static int depth = 0;
-		std::cout << "current depth = " << depth << std::endl;
+		// std::cout << "current depth = " << depth << std::endl;
 		if (*node == NULL) //End of recursion, found an empty node thefore inserting new one in it's place
 		{
 			*node = new Node(point, id);
@@ -50,7 +50,7 @@ struct KdTree
 	{
 		// TODO: Fill in this function to insert a new point into the tree DONE
 		// the function should create a new node and place correctly with in the root
-		std::cout << "inserting new node" << std::endl;
+		// std::cout << "inserting new node" << std::endl;
 		insertNode(&root, point, id);
 	}
 
