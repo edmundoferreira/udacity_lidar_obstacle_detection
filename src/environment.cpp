@@ -94,7 +94,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
     // ----------------------------------------------------
     // -----Open 3D viewer and display City Block     -----
     // ----------------------------------------------------
-    bool renderScene = false;
+    bool renderOriginalScene = false;
+    bool renderFilteredScene = false;
     bool renderClusters = true;
     bool renderBoundingBox = true;
     bool renderSegmentPlane = true;
@@ -103,10 +104,12 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
 
     // ProcessPointClouds<pcl::PointXYZI> *pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
     // pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
-    // renderPointCloud(viewer, inputCloud, "inputCloud");
+    if (renderOriginalScene)
+        renderPointCloud(viewer, inputCloud, "inputCloud");
+
     auto filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.1, Eigen::Vector4f(-10, -5, -2, 1), Eigen::Vector4f(30, 7.5, 1, 1));
 
-    if (renderScene)
+    if (renderFilteredScene)
         renderPointCloud(viewer, filterCloud, "filterCloud");
 
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, 50, 0.2);
