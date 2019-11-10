@@ -97,7 +97,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer)
     bool renderClusters = true;
     bool renderBoundingBox = true;
     bool renderSegmentPlane = true;
-    bool renderObstacles= true;
+    bool renderObstacles= false;
 
 
     ProcessPointClouds<pcl::PointXYZI> *pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
@@ -106,18 +106,36 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr &viewer)
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("/home/ed/git_repos/udacity_lidar_obstacle_detection/src/sensors/data/pcd/data_1/0000000000.pcd");
     // renderPointCloud(viewer, inputCloud, "inputCloud");
     // Experiment with the ? values and find what works best
-    auto filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.20, Eigen::Vector4f(-10, -5, -3, 1), Eigen::Vector4f(35, 8, 0, 1));
+    auto filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.10, Eigen::Vector4f(-10, -5, -3, 1), Eigen::Vector4f(35, 8, 0, 1));
 
     if (renderScene)
         renderPointCloud(viewer, filterCloud, "filterCloud");
-
 
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2);
     if (renderSegmentPlane)
         renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0, 1, 0));
 
     if (renderObstacles)
-        renderPointCloud(viewer, segmentCloud.first, "obstCloud", Color(1,0,0));
+        renderPointCloud(viewer, segmentCloud.first, "obstCloud", Color(1, 0, 0));
+
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, .3, 30, 10000);
+
+    int clusterId = 0;
+    std::vector<Color> colors = {Color(1, 0, 0), Color(1, 1, 0), Color(0, 0, 1)};
+
+    for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters)
+    {
+        if (renderClusters)
+            renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId % 3]);
+
+        if (renderBoundingBox)
+        {
+            Box box = pointProcessorI->BoundingBox(cluster);
+            renderBox(viewer, box, clusterId);
+        }
+
+        ++clusterId;
+    }
 }
 
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
