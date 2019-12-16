@@ -318,6 +318,3 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 
     return segResult;
 }
-
-
-

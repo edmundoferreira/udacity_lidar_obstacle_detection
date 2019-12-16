@@ -96,8 +96,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
     // ----------------------------------------------------
     bool renderOriginalScene = false;
     bool renderFilteredScene = false;
-    bool renderClusters = true;
-    bool renderBoundingBox = true;
+    bool renderClusters = false;
+    bool renderBoundingBox = false;
     bool renderSegmentPlane = true;
     bool renderObstacles= false;
 
@@ -119,7 +119,8 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
     if (renderObstacles)
         renderPointCloud(viewer, segmentCloud.first, "obstCloud", Color(1, 0, 0));
 
-    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.4, 30, 2000);
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters;
+    // cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.4, 30, 2000);
 
     int clusterId = 0;
     std::vector<Color> colors = {Color(1, 0, 0), Color(1, 1, 0), Color(0, 0, 1)};
